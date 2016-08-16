@@ -9,6 +9,7 @@
         "issues": "https://github.com/gpcsolutions/sentry/issues"
     },
     "require-dev": {
+        "composer/installers": "^1",
         "php": ">=5.3.0"
     },
     "require": {
