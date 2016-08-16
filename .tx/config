@@ -1,0 +1,9 @@
+[main]
+host = https://www.transifex.com
+lang_map = uz: uz_UZ
+
+[sentry.sentry]
+file_filter = langs/<lang>/sentry.lang
+source_file = langs/en_US/sentry.lang
+source_lang = en_US
+type = MOZILLAPROPERTIES
