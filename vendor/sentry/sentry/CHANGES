@@ -1,3 +1,41 @@
+1.5.0
+-----
+
+- Added named transaction support.
+
+1.4.0
+-----
+
+This version primarily overhauls the exception/stacktrace generation to fix
+a few bugs and improve the quality of data (#359).
+
+- Added ``excluded_app_paths`` config.
+- Removed ``shift_vars`` config.
+- Correct fatal error handling to only operate on expected types. This also
+  fixes some behavior with the error suppression operator.
+- Expose anonymous and similar frames in the stacktrace.
+- Default ``prefixes`` to PHP's include paths.
+- Remove ``module`` usage.
+- Better handle empty argument context.
+- Correct alignment of filename (current frame) and function (caller frame)
+
+1.3.0
+-----
+
+- Fixed an issue causing the error suppression operator to not be respected (#335)
+- Fixed some serialization behavior (#352)
+- Fixed an issue with app paths and trailing slashes (#350)
+- Handle non-latin encoding with source code context line (#345)
+
+1.2.0
+-----
+
+- Handle non-latin encoding in source code and exception values (#342)
+- Ensure pending events are sent on shutdown by default (#338)
+- Add ``captureLastError`` helper (#334)
+- Dont report duplicate errors with fatal error handler (#334)
+- Enforce maximum length for string serialization (#329)
+
 1.1.0
 -----
 

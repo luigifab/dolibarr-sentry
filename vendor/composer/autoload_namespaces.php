@@ -7,6 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Raven_' => array($vendorDir . '/sentry/sentry/lib'),
-    'Psr\\Log\\' => array($vendorDir . '/psr/log'),
     'Parsedown' => array($vendorDir . '/erusev/parsedown'),
 );
