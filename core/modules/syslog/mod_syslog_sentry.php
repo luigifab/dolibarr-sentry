@@ -156,7 +156,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface
 	 */
 	public function export($content)
 	{
-		if (! $this->isActive()) {
+		if (!$this->isActive()) {
 			return;
 		}
 
@@ -168,9 +168,9 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface
 				'curl_method' => 'exec',
 				'release' => DOL_VERSION,
 				'tags' => array(
-						'php_version' => phpversion()
-					)
+					'php_version' => phpversion()
 				)
+			)
 		);
 
 		$client->user_context(array(

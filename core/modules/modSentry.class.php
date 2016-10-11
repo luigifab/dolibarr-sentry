@@ -17,11 +17,11 @@
  */
 
 /**
- * 	\defgroup	sentry	Sentry module
- * 	\brief		Sentry module descriptor.
- * 	\file		core/modules/modSentry.class.php
- * 	\ingroup	sentry
- * 	\brief		Description and activation file for module Sentry
+ *    \defgroup    sentry    Sentry module
+ *    \brief        Sentry module descriptor.
+ *    \file        core/modules/modSentry.class.php
+ *    \ingroup    sentry
+ *    \brief        Description and activation file for module Sentry
  */
 include_once DOL_DOCUMENT_ROOT . "/core/modules/DolibarrModules.class.php";
 
@@ -32,9 +32,9 @@ class modSentry extends DolibarrModules
 {
 
 	/**
-	 * 	Constructor. Define names, constants, directories, boxes, permissions
+	 *    Constructor. Define names, constants, directories, boxes, permissions
 	 *
-	 * 	@param	DoliDB		$db	Database handler
+	 * @param    DoliDB $db Database handler
 	 */
 	public function __construct($db)
 	{
@@ -109,7 +109,7 @@ class modSentry extends DolibarrModules
 				'sentry/bower_components/raven-js/dist/raven.min.js',
 				'sentry/bower_components/raven-js/dist/plugins/console.min.js',
 				'sentry/js/sentry.js.php'
-			 ),
+			),
 			// Set here all hooks context managed by module
 			// 'hooks' => array('hookcontext1','hookcontext2'),
 			// To force the default directories names
@@ -149,7 +149,7 @@ class modSentry extends DolibarrModules
 		// Minimum version of PHP required by module
 		$this->phpmin = array(5, 3);
 		// Minimum version of Dolibarr required by module
-		$this->need_dolibarr_version = array(5, 0);
+		$this->need_dolibarr_version = array(5, 0, '0-alpha');
 		// Language files list (langfiles@sentry)
 		$this->langfiles = array("sentry@sentry");
 		// Constants
@@ -206,8 +206,8 @@ class modSentry extends DolibarrModules
 		// 'user'             to add a tab in user view
 
 		// Dictionaries
-		if (! isset($conf->sentry->enabled)) {
-			$conf->sentry=new stdClass();
+		if (!isset($conf->sentry->enabled)) {
+			$conf->sentry = new stdClass();
 			$conf->sentry->enabled = 0;
 		}
 		$this->dictionaries = array();
@@ -257,11 +257,11 @@ class modSentry extends DolibarrModules
 		$this->boxes = array(); // Boxes list
 		// Example:
 		$this->boxes = array(
-		//	0 => array(
-		//		'file' => 'mybox@sentry',
-		//		'note' => '',
-		//		'enabledbydefaulton' => 'Home'
-		//	)
+			//	0 => array(
+			//		'file' => 'mybox@sentry',
+			//		'note' => '',
+			//		'enabledbydefaulton' => 'Home'
+			//	)
 		);
 
 		// Permissions
@@ -475,8 +475,8 @@ class modSentry extends DolibarrModules
 	 * (defined in constructor) into Dolibarr database.
 	 * It also creates data directories
 	 *
-	 * 	@param		string	$options	Options when enabling module ('', 'noboxes')
-	 * 	@return		int					1 if OK, 0 if KO
+	 * @param        string $options Options when enabling module ('', 'noboxes')
+	 * @return        int                    1 if OK, 0 if KO
 	 */
 	public function init($options = '')
 	{
@@ -489,8 +489,8 @@ class modSentry extends DolibarrModules
 	 * Remove from database constants, boxes and permissions from Dolibarr database.
 	 * Data directories are not deleted
 	 *
-	 * 	@param		string	$options	Options when enabling module ('', 'noboxes')
-	 * 	@return		int					1 if OK, 0 if KO
+	 * @param        string $options Options when enabling module ('', 'noboxes')
+	 * @return        int                    1 if OK, 0 if KO
 	 */
 	public function remove($options = '')
 	{
