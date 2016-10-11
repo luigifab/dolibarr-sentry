@@ -30,51 +30,51 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
 global $conf, $db, $user;
 
 if (array_key_exists('mod_syslog_sentry', $conf->loghandlers) && !empty($conf->global->SYSLOG_SENTRY_DSN)) {
-	/**
-	 * Convert Dolibarr levels to JavaScript levels
-	 * @see https://developer.mozilla.org/en-US/Add-ons/SDK/Tools/console#Logging_Levels
-	 */
-	$log_level = dolibarr_get_const($db, "SYSLOG_LEVEL", 0);
-	switch (intval($log_level)) {
-		case LOG_EMERG:
-		case LOG_ALERT:
-		case LOG_CRIT:
-		case LOG_ERR:
-			$log_level = array(
-				'error'
-			);
-			break;
-		case LOG_WARNING:
-		case LOG_NOTICE:
-			$log_level = array(
-				'error',
-				'warn'
-			);
-			break;
-		case LOG_INFO:
-		default:
-			$log_level = array(
-				'error',
-				'warn',
-				'info'
-			);
-			break;
-		case LOG_DEBUG:
-			$log_level = array(
-				'error',
-				'warn',
-				'info',
-				'debug'
-			);
-			break;
-	};
+/**
+ * Convert Dolibarr levels to JavaScript levels
+ * @see https://developer.mozilla.org/en-US/Add-ons/SDK/Tools/console#Logging_Levels
+ */
+$log_level = dolibarr_get_const($db, "SYSLOG_LEVEL", 0);
+switch (intval($log_level)) {
+	case LOG_EMERG:
+	case LOG_ALERT:
+	case LOG_CRIT:
+	case LOG_ERR:
+		$log_level = array(
+			'error'
+		);
+		break;
+	case LOG_WARNING:
+	case LOG_NOTICE:
+		$log_level = array(
+			'error',
+			'warn'
+		);
+		break;
+	case LOG_INFO:
+	default:
+		$log_level = array(
+			'error',
+			'warn',
+			'info'
+		);
+		break;
+	case LOG_DEBUG:
+		$log_level = array(
+			'error',
+			'warn',
+			'info',
+			'debug'
+		);
+		break;
+};
 
-	// Filter out secret key
-	$dsn = parse_url($conf->global->SYSLOG_SENTRY_DSN);
-	$public_dsn = $dsn['scheme'] . '://' . $dsn['user'] . '@' . $dsn['host'] . $dsn['path'];
+// Filter out secret key
+$dsn = parse_url($conf->global->SYSLOG_SENTRY_DSN);
+$public_dsn = $dsn['scheme'] . '://' . $dsn['user'] . '@' . $dsn['host'] . $dsn['path'];
 
-	header('Content-Type: application/javascript');
-	?>
+header('Content-Type: application/javascript');
+?>
 Raven
 	.config('<?php echo $public_dsn ?>')
 	.addPlugin(Raven.Plugins.Console,
@@ -85,7 +85,11 @@ Raven
 	.install();
 Raven.setUserContext({username: '<?php echo $user->login ?>'});
 Raven.setRelease('<?php echo DOL_VERSION ?>');
-<?php // Catch jQuery ajaxError ?>
+<?php
+/**
+ * Catch jQuery errors
+ */
+?>
 $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
 	Raven.captureMessage(thrownError || jqXHR.statusText, {
 		extra: {
@@ -98,5 +102,5 @@ $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
 		}
 	});
 });
-	<?php
+<?php
 }
