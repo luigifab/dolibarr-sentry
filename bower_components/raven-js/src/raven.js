@@ -20,6 +20,7 @@ var uuid4 = utils.uuid4;
 var htmlTreeAsString = utils.htmlTreeAsString;
 var parseUrl = utils.parseUrl;
 var isString = utils.isString;
+var fill = utils.fill;
 
 var wrapConsoleMethod = require('./console').wrapMethod;
 
@@ -29,6 +30,7 @@ var dsnKeys = 'source protocol user pass host port path'.split(' '),
 function now() {
     return +new Date();
 }
+
 
 // First, check for JSON support
 // If there is no JSON, we no-op the core features of Raven
@@ -52,7 +54,8 @@ function Raven() {
         crossOrigin: 'anonymous',
         collectWindowErrors: true,
         maxMessageLength: 0,
-        stackTraceLimit: 50
+        stackTraceLimit: 50,
+        autoBreadcrumbs: true
     };
     this._ignoreOnError = 0;
     this._isRavenInstalled = false;
@@ -65,7 +68,6 @@ function Raven() {
     this._startTime = now();
     this._wrappedBuiltIns = [];
     this._breadcrumbs = [];
-    this._breadcrumbLimit = 20;
     this._lastCapturedEvent = null;
     this._keypressTimeout;
     this._location = window.location;
@@ -87,7 +89,7 @@ Raven.prototype = {
     // webpack (using a build step causes webpack #1617). Grunt verifies that
     // this value matches package.json during build.
     //   See: https://github.com/getsentry/raven-js/issues/465
-    VERSION: '3.4.1',
+    VERSION: '3.7.0',
 
     debug: false,
 
@@ -121,11 +123,7 @@ Raven.prototype = {
             });
         }
 
-        var uri = this._parseDSN(dsn),
-            lastSlash = uri.path.lastIndexOf('/'),
-            path = uri.path.substr(1, lastSlash);
-
-        this._dsn = dsn;
+        this.setDSN(dsn);
 
         // "Script error." is hard coded into browsers for errors that it can't read.
         // this is the result of a script being pulled in from an external domain and CORS.
@@ -137,15 +135,22 @@ Raven.prototype = {
         this._globalOptions.ignoreUrls = this._globalOptions.ignoreUrls.length ? joinRegExp(this._globalOptions.ignoreUrls) : false;
         this._globalOptions.whitelistUrls = this._globalOptions.whitelistUrls.length ? joinRegExp(this._globalOptions.whitelistUrls) : false;
         this._globalOptions.includePaths = joinRegExp(this._globalOptions.includePaths);
+        this._globalOptions.maxBreadcrumbs = Math.max(0, Math.min(this._globalOptions.maxBreadcrumbs || 100, 100)); // default and hard limit is 100
 
-        this._globalKey = uri.user;
-        this._globalSecret = uri.pass && uri.pass.substr(1);
-        this._globalProject = uri.path.substr(lastSlash + 1);
+        var autoBreadcrumbDefaults = {
+            xhr: true,
+            console: true,
+            dom: true,
+            location: true
+        };
 
-        this._globalServer = this._getGlobalServer(uri);
-
-        this._globalEndpoint = this._globalServer +
-            '/' + path + 'api/' + this._globalProject + '/store/';
+        var autoBreadcrumbs = this._globalOptions.autoBreadcrumbs;
+        if ({}.toString.call(autoBreadcrumbs) === '[object Object]') {
+            autoBreadcrumbs = objectMerge(autoBreadcrumbDefaults, autoBreadcrumbs);
+        } else if (autoBreadcrumbs !== false) {
+            autoBreadcrumbs = autoBreadcrumbDefaults;
+        }
+        this._globalOptions.autoBreadcrumbs = autoBreadcrumbs;
 
         TraceKit.collectWindowErrors = !!this._globalOptions.collectWindowErrors;
 
@@ -167,7 +172,9 @@ Raven.prototype = {
             TraceKit.report.subscribe(function () {
                 self._handleOnErrorStackInfo.apply(self, arguments);
             });
-            this._wrapBuiltIns();
+            this._instrumentTryCatch();
+            if (self._globalOptions.autoBreadcrumbs)
+                this._instrumentBreadcrumbs();
 
             // Install all of the plugins
             this._drainPlugins();
@@ -177,6 +184,27 @@ Raven.prototype = {
 
         Error.stackTraceLimit = this._globalOptions.stackTraceLimit;
         return this;
+    },
+
+    /*
+     * Set the DSN (can be called multiple time unlike config)
+     *
+     * @param {string} dsn The public Sentry DSN
+     */
+    setDSN: function(dsn) {
+        var uri = this._parseDSN(dsn),
+          lastSlash = uri.path.lastIndexOf('/'),
+          path = uri.path.substr(1, lastSlash);
+
+        this._dsn = dsn;
+        this._globalKey = uri.user;
+        this._globalSecret = uri.pass && uri.pass.substr(1);
+        this._globalProject = uri.path.substr(lastSlash + 1);
+
+        this._globalServer = this._getGlobalServer(uri);
+
+        this._globalEndpoint = this._globalServer +
+            '/' + path + 'api/' + this._globalProject + '/store/';
     },
 
     /*
@@ -230,16 +258,16 @@ Raven.prototype = {
             if (func.__raven__) {
                 return func;
             }
+
+            // If this has already been wrapped in the past, return that
+            if (func.__raven_wrapper__ ){
+                return func.__raven_wrapper__ ;
+            }
         } catch (e) {
-            // Just accessing the __raven__ prop in some Selenium environments
+            // Just accessing custom props in some Selenium environments
             // can cause a "Permission denied" exception (see raven-js#495).
             // Bail on wrapping and return the function as-is (defers to window.onerror).
             return func;
-        }
-
-        // If this has already been wrapped in the past, return that
-        if (func.__raven_wrapper__ ){
-            return func.__raven_wrapper__ ;
         }
 
         function wrapped() {
@@ -305,7 +333,12 @@ Raven.prototype = {
      */
     captureException: function(ex, options) {
         // If not an Error is passed through, recall as a message instead
-        if (!isError(ex)) return this.captureMessage(ex, options);
+        if (!isError(ex)) {
+            return this.captureMessage(ex, objectMerge({
+                trimHeadFrames: 1,
+                stacktrace: true // if we fall back to captureMessage, default to attempting a new trace
+            }, options));
+        }
 
         // Store the raw exception object for potential debugging and introspection
         this._lastCapturedException = ex;
@@ -342,12 +375,41 @@ Raven.prototype = {
             return;
         }
 
+        var data = objectMerge({
+            message: msg + ''  // Make sure it's actually a string
+        }, options);
+
+        if (options && options.stacktrace) {
+            var ex;
+            // create a stack trace from this point; just trim
+            // off extra frames so they don't include this function call (or
+            // earlier Raven.js library fn calls)
+            try {
+                throw new Error(msg);
+            } catch (ex1) {
+                ex = ex1;
+            }
+
+            // null exception name so `Error` isn't prefixed to msg
+            ex.name = null;
+
+            options = objectMerge({
+                // fingerprint on msg, not stack trace (legacy behavior, could be
+                // revisited)
+                fingerprint: msg,
+                trimHeadFrames: (options.trimHeadFrames || 0) + 1
+            }, options);
+
+            var stack = TraceKit.computeStackTrace(ex);
+            var frames = this._prepareFrames(stack, options);
+            data.stacktrace = {
+                // Sentry expects frames oldest to newest
+                frames: frames.reverse()
+            }
+        }
+
         // Fire away!
-        this._send(
-            objectMerge({
-                message: msg + ''  // Make sure it's actually a string
-            }, options)
-        );
+        this._send(data);
 
         return this;
     },
@@ -358,9 +420,10 @@ Raven.prototype = {
         }, obj);
 
         this._breadcrumbs.push(crumb);
-        if (this._breadcrumbs.length > this._breadcrumbLimit) {
+        if (this._breadcrumbs.length > this._globalOptions.maxBreadcrumbs) {
             this._breadcrumbs.shift();
         }
+        return this;
     },
 
     addPlugin: function(plugin /*arg1, arg2, ... argN*/) {
@@ -742,16 +805,10 @@ Raven.prototype = {
     /**
      * Install any queued plugins
      */
-    _wrapBuiltIns: function() {
+    _instrumentTryCatch: function() {
         var self = this;
 
-        function fill(obj, name, replacement, noUndo) {
-            var orig = obj[name];
-            obj[name] = replacement(orig);
-            if (!noUndo) {
-                self._wrappedBuiltIns.push([obj, name, orig]);
-            }
-        }
+        var wrappedBuiltIns = self._wrappedBuiltIns;
 
         function wrapTimeFn(orig) {
             return function (fn, t) { // preserve arity
@@ -777,6 +834,8 @@ Raven.prototype = {
             };
         }
 
+        var autoBreadcrumbs = this._globalOptions.autoBreadcrumbs;
+
         function wrapEventTarget(global) {
             var proto = window[global] && window[global].prototype;
             if (proto && proto.hasOwnProperty && proto.hasOwnProperty('addEventListener')) {
@@ -790,10 +849,10 @@ Raven.prototype = {
                             // can sometimes get 'Permission denied to access property "handle Event'
                         }
 
-
-                        // TODO: more than just click
+                        // More breadcrumb DOM capture ... done here and not in `_instrumentBreadcrumbs`
+                        // so that we don't have more than one wrapper function
                         var before;
-                        if (global === 'EventTarget' || global === 'Node') {
+                        if (autoBreadcrumbs && autoBreadcrumbs.dom && (global === 'EventTarget' || global === 'Node')) {
                             if (evtName === 'click'){
                                 before = self._breadcrumbEventHandler(evtName);
                             } else if (evtName === 'keypress') {
@@ -802,46 +861,28 @@ Raven.prototype = {
                         }
                         return orig.call(this, evtName, self.wrap(fn, undefined, before), capture, secure);
                     };
-                });
+                }, wrappedBuiltIns);
                 fill(proto, 'removeEventListener', function (orig) {
                     return function (evt, fn, capture, secure) {
-                        fn = fn && (fn.__raven_wrapper__ ? fn.__raven_wrapper__  : fn);
+                        try {
+                            fn = fn && (fn.__raven_wrapper__ ? fn.__raven_wrapper__  : fn);
+                        } catch (e) {
+                            // ignore, accessing __raven_wrapper__ will throw in some Selenium environments
+                        }
                         return orig.call(this, evt, fn, capture, secure);
                     };
-                });
+                }, wrappedBuiltIns);
             }
         }
 
-        function wrapProp(prop, xhr) {
-            if (prop in xhr && isFunction(xhr[prop])) {
-                fill(xhr, prop, function (orig) {
-                    return self.wrap(orig);
-                }, true /* noUndo */); // don't track filled methods on XHR instances
-            }
-        }
-
-        fill(window, 'setTimeout', wrapTimeFn);
-        fill(window, 'setInterval', wrapTimeFn);
+        fill(window, 'setTimeout', wrapTimeFn, wrappedBuiltIns);
+        fill(window, 'setInterval', wrapTimeFn, wrappedBuiltIns);
         if (window.requestAnimationFrame) {
             fill(window, 'requestAnimationFrame', function (orig) {
                 return function (cb) {
                     return orig(self.wrap(cb));
                 };
-            });
-        }
-
-        // Capture breadcrubms from any click that is unhandled / bubbled up all the way
-        // to the document. Do this before we instrument addEventListener.
-        if (this._hasDocument) {
-            if (document.addEventListener) {
-                document.addEventListener('click', self._breadcrumbEventHandler('click'), false);
-                document.addEventListener('keypress', self._keypressEventHandler(), false);
-            }
-            else {
-                // IE8 Compatibility
-                document.attachEvent('onclick', self._breadcrumbEventHandler('click'));
-                document.attachEvent('onkeypress', self._keypressEventHandler());
-            }
+            }, wrappedBuiltIns);
         }
 
         // event targets borrowed from bugsnag-js:
@@ -851,7 +892,41 @@ Raven.prototype = {
             wrapEventTarget(eventTargets[i]);
         }
 
-        if ('XMLHttpRequest' in window) {
+        var $ = window.jQuery || window.$;
+        if ($ && $.fn && $.fn.ready) {
+            fill($.fn, 'ready', function (orig) {
+                return function (fn) {
+                    return orig.call(this, self.wrap(fn));
+                };
+            }, wrappedBuiltIns);
+        }
+    },
+
+
+    /**
+     * Instrument browser built-ins w/ breadcrumb capturing
+     *  - XMLHttpRequests
+     *  - DOM interactions (click/typing)
+     *  - window.location changes
+     *  - console
+     *
+     * Can be disabled or individually configured via the `autoBreadcrumbs` config option
+     */
+    _instrumentBreadcrumbs: function () {
+        var self = this;
+        var autoBreadcrumbs = this._globalOptions.autoBreadcrumbs;
+
+        var wrappedBuiltIns = self._wrappedBuiltIns;
+
+        function wrapProp(prop, xhr) {
+            if (prop in xhr && isFunction(xhr[prop])) {
+                fill(xhr, prop, function (orig) {
+                    return self.wrap(orig);
+                }); // intentionally don't track filled methods on XHR instances
+            }
+        }
+
+        if (autoBreadcrumbs.xhr && 'XMLHttpRequest' in window) {
             var xhrproto = XMLHttpRequest.prototype;
             fill(xhrproto, 'open', function(origOpen) {
                 return function (method, url) { // preserve arity
@@ -867,7 +942,7 @@ Raven.prototype = {
 
                     return origOpen.apply(this, arguments);
                 };
-            });
+            }, wrappedBuiltIns);
 
             fill(xhrproto, 'send', function(origSend) {
                 return function (data) { // preserve arity
@@ -896,7 +971,7 @@ Raven.prototype = {
                     if ('onreadystatechange' in xhr && isFunction(xhr.onreadystatechange)) {
                         fill(xhr, 'onreadystatechange', function (orig) {
                             return self.wrap(orig, undefined, onreadystatechangeHandler);
-                        }, true /* noUndo */);
+                        } /* intentionally don't track this instrumentation */);
                     } else {
                         // if onreadystatechange wasn't actually set by the page on this xhr, we
                         // are free to set our own and capture the breadcrumb
@@ -905,7 +980,21 @@ Raven.prototype = {
 
                     return origSend.apply(this, arguments);
                 };
-            });
+            }, wrappedBuiltIns);
+        }
+
+        // Capture breadcrumbs from any click that is unhandled / bubbled up all the way
+        // to the document. Do this before we instrument addEventListener.
+        if (autoBreadcrumbs.dom && this._hasDocument) {
+            if (document.addEventListener) {
+                document.addEventListener('click', self._breadcrumbEventHandler('click'), false);
+                document.addEventListener('keypress', self._keypressEventHandler(), false);
+            }
+            else {
+                // IE8 Compatibility
+                document.attachEvent('onclick', self._breadcrumbEventHandler('click'));
+                document.attachEvent('onkeypress', self._keypressEventHandler());
+            }
         }
 
         // record navigation (URL) changes
@@ -915,7 +1004,7 @@ Raven.prototype = {
         var chrome = window.chrome;
         var isChromePackagedApp = chrome && chrome.app && chrome.app.runtime;
         var hasPushState = !isChromePackagedApp && window.history && history.pushState;
-        if (hasPushState) {
+        if (autoBreadcrumbs.location && hasPushState) {
             // TODO: remove onpopstate handler on uninstall()
             var oldOnPopState = window.onpopstate;
             window.onpopstate = function () {
@@ -930,7 +1019,7 @@ Raven.prototype = {
             fill(history, 'pushState', function (origPushState) {
                 // note history.pushState.length is 0; intentionally not declaring
                 // params to preserve 0 arity
-                return function(/* state, title, url */) {
+                return function (/* state, title, url */) {
                     var url = arguments.length > 2 ? arguments[2] : undefined;
 
                     // url argument is optional
@@ -941,32 +1030,24 @@ Raven.prototype = {
 
                     return origPushState.apply(this, arguments);
                 };
-            });
+            }, wrappedBuiltIns);
         }
 
-        // console
-        var consoleMethodCallback = function (msg, data) {
-            self.captureBreadcrumb({
-                message: msg,
-                level: data.level,
-                category: 'console'
-            });
-        };
+        if (autoBreadcrumbs.console && 'console' in window && console.log) {
+            // console
+            var consoleMethodCallback = function (msg, data) {
+                self.captureBreadcrumb({
+                    message: msg,
+                    level: data.level,
+                    category: 'console'
+                });
+            };
 
-        if ('console' in window && console.log) {
             each(['debug', 'info', 'warn', 'error', 'log'], function (_, level) {
                 wrapConsoleMethod(console, level, consoleMethodCallback);
             });
         }
 
-        var $ = window.jQuery || window.$;
-        if ($ && $.fn && $.fn.ready) {
-            fill($.fn, 'ready', function (orig) {
-                return function (fn) {
-                    return orig.call(this, self.wrap(fn));
-                };
-            });
-        }
     },
 
     _restoreBuiltIns: function () {
@@ -1031,17 +1112,7 @@ Raven.prototype = {
     },
 
     _handleStackInfo: function(stackInfo, options) {
-        var self = this;
-        var frames = [];
-
-        if (stackInfo.stack && stackInfo.stack.length) {
-            each(stackInfo.stack, function(i, stack) {
-                var frame = self._normalizeFrame(stack);
-                if (frame) {
-                    frames.push(frame);
-                }
-            });
-        }
+        var frames = this._prepareFrames(stackInfo, options);
 
         this._triggerEvent('handle', {
             stackInfo: stackInfo,
@@ -1053,10 +1124,33 @@ Raven.prototype = {
             stackInfo.message,
             stackInfo.url,
             stackInfo.lineno,
-            frames.slice(0, this._globalOptions.stackTraceLimit),
+            frames,
             options
         );
     },
+
+    _prepareFrames: function(stackInfo, options) {
+        var self = this;
+        var frames = [];
+        if (stackInfo.stack && stackInfo.stack.length) {
+            each(stackInfo.stack, function(i, stack) {
+                var frame = self._normalizeFrame(stack);
+                if (frame) {
+                    frames.push(frame);
+                }
+            });
+
+            // e.g. frames captured via captureMessage throw
+            if (options && options.trimHeadFrames) {
+                for (var j = 0; j < options.trimHeadFrames && j < frames.length; j++) {
+                    frames[j].in_app = false;
+                }
+            }
+        }
+        frames = frames.slice(0, this._globalOptions.stackTraceLimit);
+        return frames;
+    },
+
 
     _normalizeFrame: function(frame) {
         if (!frame.url) return;
@@ -1083,7 +1177,6 @@ Raven.prototype = {
 
     _processException: function(type, message, fileurl, lineno, frames, options) {
         var stacktrace;
-
         if (!!this._globalOptions.ignoreErrors.test && this._globalOptions.ignoreErrors.test(message)) return;
 
         message += '';
@@ -1171,6 +1264,9 @@ Raven.prototype = {
         if (httpData) {
             baseData.request = httpData;
         }
+
+        // HACK: delete `trimHeadFrames` to prevent from appearing in outbound payload
+        if (data.trimHeadFrames) delete data.trimHeadFrames;
 
         data = objectMerge(baseData, data);
 
