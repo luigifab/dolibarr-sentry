@@ -1,19 +1,33 @@
 {
-    "name": "gpcsolutions/sentry",
-    "type": "dolibarr-module",
-    "description": "Send logs to a Sentry server",
-    "keywords": ["dolibarr","template"],
-    "homepage": "https://github.com/gpcsolutions/sentry",
-    "license": "GPL-3.0+",
-    "support": {
-        "issues": "https://github.com/gpcsolutions/sentry/issues"
-    },
-    "require-dev": {
-        "composer/installers": "^1",
-        "php": ">=5.3.0"
-    },
-    "require": {
-        "erusev/parsedown": "*",
-        "sentry/sentry": "^1"
-    }
+  "name": "gpcsolutions/sentry",
+  "type": "dolibarr-module",
+  "description": "Send logs to a Sentry server",
+  "keywords": [
+    "dolibarr",
+    "template"
+  ],
+  "homepage": "https://github.com/gpcsolutions/sentry",
+  "license": "GPL-3.0+",
+  "support": {
+    "issues": "https://github.com/gpcsolutions/sentry/issues"
+  },
+  "require-dev": {
+    "composer/installers": "^1",
+    "php": ">=5.3.0"
+  },
+  "require": {
+    "erusev/parsedown": "*",
+    "sentry/sentry": "^1"
+  },
+  "scripts": {
+    "post-update-cmd": "@bower-update",
+    "bower-update": "bower update",
+    "build": "cd build; ./makepack-dolibarrmodule.pl",
+    "release": [
+      "@composer update --no-dev",
+      "@build",
+      "@composer update"
+    ],
+    "production": "@composer update --no-dev"
+  }
 }
