@@ -4,7 +4,8 @@
   "description": "Send logs to a Sentry server",
   "keywords": [
     "dolibarr",
-    "template"
+    "sentry",
+    "logging"
   ],
   "homepage": "https://github.com/gpcsolutions/sentry",
   "license": "GPL-3.0+",

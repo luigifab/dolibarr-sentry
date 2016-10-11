@@ -19,6 +19,27 @@ Install
    composer install
    ```
 
+### Using [Composer](https://getcomposer.org)
+Require this repository from Dolibarr's composer:
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/gpcsolutions/sentry"
+    }
+  ],
+  "require": {
+    "gpcsolutions/sentry": "dev-master"
+  }
+}
+```
+
+Run
+```sh
+composer update
+```
+
 ### From an archive release
 
 Extract the archive to ```htdocs/custom```
