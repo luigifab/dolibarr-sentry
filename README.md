@@ -8,6 +8,21 @@ https://sentry.io
 For [Dolibarr](https://dolibarr.org) >= 5.0.x.
 Sentry support was included in Dolibarr core 3.9 and is broken in 4.x.
 
+Install
+-------
+
+### From the GIT repository
+
+1. Clone the repository into ```htdocs/custom```
+2. Install [Composer](https://getcomposer.org) and [Bower](https://bower.io) dependencies:
+   ```sh
+   composer install
+   ```
+
+### From an archive release
+
+Extract the archive to ```htdocs/custom```
+
 Contributions
 -------------
 

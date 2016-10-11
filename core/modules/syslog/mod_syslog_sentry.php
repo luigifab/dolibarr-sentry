@@ -34,8 +34,11 @@ $langs->load('sentry@sentry');
  *
  * @see https://docs.getsentry.com/on-premise/clients/php/
  */
+// @codingStandardsIgnoreStart
 class mod_syslog_sentry extends LogHandler implements LogHandlerInterface
 {
+	// @codingStandardsIgnoreEnd
+
 	/**
 	 * @var string Log handler code
 	 */
