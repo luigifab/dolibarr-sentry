@@ -25,6 +25,7 @@ global $langs, $user;
 
 // Libraries
 require_once DOL_DOCUMENT_ROOT . "/core/lib/admin.lib.php";
+require_once '../class/ParsedownDolibarr.php';
 require_once '../lib/sentry.lib.php';
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -34,7 +35,7 @@ require __DIR__ . '/../vendor/autoload.php';
 $langs->load("sentry@sentry");
 
 // Access control
-if (! $user->admin) {
+if (!$user->admin) {
 	accessforbidden();
 }
 
@@ -54,7 +55,7 @@ llxHeader('', $langs->trans($page_name));
 // Subheader
 $linkback = '<a href="' . DOL_URL_ROOT . '/admin/modules.php">'
 	. $langs->trans("BackToModuleList") . '</a>';
-print_fiche_titre($langs->trans($page_name), $linkback);
+print load_fiche_titre($langs->trans($page_name), $linkback);
 
 // Configuration header
 $head = sentryAdminPrepareHead();
@@ -72,13 +73,7 @@ echo $langs->trans("SentryAboutPage");
 echo '<br>';
 
 $buffer = file_get_contents(dol_buildpath('/sentry/README.md', 0));
-echo Parsedown::instance()->text($buffer);
-
-echo '<br>',
-'<a href="' . dol_buildpath('/sentry/COPYING', 1) . '">',
-'<img src="' . dol_buildpath('/sentry/img/gplv3.png', 1) . '"/>',
-'</a>';
-
+echo ParsedownDolibarr::instance()->text($buffer);
 
 // Page end
 dol_fiche_end();

@@ -1,18 +1,24 @@
-Send logs to a Sentry server
-===========================
+Send Dolibarr logs to a Sentry server
+=====================================
 
+![Sentry logo](img/sentry.png)
+
+https://sentry.io
+
+For [Dolibarr](https://dolibarr.org) >= 5.0.x.
+Sentry support was included in Dolibarr core 3.9 and is broken in 4.x.
 
 Contributions
 -------------
 
-Feel free to contribute and report defects at <http://github.com/GPCsolutions/dolibarr-module-template/issues>
+Feel free to contribute and report defects at <http://github.com/GPCsolutions/sentry/issues>
 
 Licenses
 --------
 
 ### Main code
 
-![GPLv3 logo](dev/img/gplv3-127x51.png)
+![GPLv3 logo](img/gplv3.png)
 
 GPLv3 or (at your option) any later version.
 
@@ -34,4 +40,4 @@ Public domain
 
 All texts and readmes.
 
-![GFDL logo](dev/img/gfdl-129x44.png)
+![GFDL logo](img/gfdl.png)

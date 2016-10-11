@@ -51,6 +51,13 @@ class ComposerStaticInit91ecc056ad00e62fdf56226bdc27d692
                 0 => __DIR__ . '/..' . '/erusev/parsedown',
             ),
         ),
+        'E' => 
+        array (
+            'Enrise\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/enrise/urihelper/src',
+            ),
+        ),
     );
 
     public static function getInitializer(ClassLoader $loader)

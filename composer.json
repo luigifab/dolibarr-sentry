@@ -16,7 +16,8 @@
     "php": ">=5.3.0"
   },
   "require": {
-    "erusev/parsedown": "*",
+    "erusev/parsedown": "^1",
+    "enrise/urihelper": "^1",
     "sentry/sentry": "^1"
   },
   "scripts": {
