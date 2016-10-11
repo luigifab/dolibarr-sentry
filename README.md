@@ -16,7 +16,7 @@ Install
 1. Clone the repository into ```htdocs/custom```
 2. Install [Composer](https://getcomposer.org) and [Bower](https://bower.io) dependencies:
    ```sh
-   composer install
+   composer install --no-dev
    ```
 
 ### Using [Composer](https://getcomposer.org)

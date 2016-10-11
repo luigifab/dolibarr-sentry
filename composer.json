@@ -12,6 +12,10 @@
   "support": {
     "issues": "https://github.com/gpcsolutions/sentry/issues"
   },
+  "config": {
+    "process-timeout": 3600,
+    "bin-dir": "dev/bin"
+  },
   "require": {
     "composer/installers": "^1",
     "php": ">=5.3.0",
