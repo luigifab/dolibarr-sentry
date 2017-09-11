@@ -467,7 +467,7 @@ class modSentry extends DolibarrModules
 		//$r++;
 
 		// Can be enabled / disabled only in the main company when multi-company is in use
-		// $this->core_enabled = 1;
+		$this->core_enabled = true;
 	}
 
 	/**
