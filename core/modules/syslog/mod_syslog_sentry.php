@@ -2,7 +2,7 @@
 /* Send logs to a Sentry server
  * Copyright (C) 2004-2005 Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2004-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2015-2016 Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
+ * Copyright (C) 2015-2018 Raphaël Doursenaud   <rdoursenaud@gpcsolutions.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,6 @@
 require_once DOL_DOCUMENT_ROOT . '/core/modules/syslog/logHandler.php';
 
 require_once dirname(__FILE__) . '/../../../vendor/autoload.php';
-
-global $langs;
-$langs->load('sentry@sentry');
 
 /**
  * Class to manage logging to Sentry
@@ -72,6 +69,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface
 	public function getInfo()
 	{
 		global $langs;
+		$langs->load('sentry@sentry');
 		return $langs->trans('SyslogSentryFromProject');
 	}
 
@@ -93,6 +91,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface
 	public function configure()
 	{
 		global $langs;
+		$langs->load('sentry@sentry');
 		return array(
 			array(
 				'constant' => 'SYSLOG_SENTRY_DSN',
