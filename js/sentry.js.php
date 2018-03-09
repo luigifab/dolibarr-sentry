@@ -20,6 +20,11 @@
  * Client side logging support
  */
 
+// This scripts needs to be public to work on the login page
+if (! defined("NOLOGIN")) {
+	define("NOLOGIN", '1');
+}
+
 // Load Dolibarr environment
 if (false === (@include '../../main.inc.php')) {  // From htdocs directory
 	require '../../../main.inc.php'; // From "custom" directory
@@ -75,23 +80,28 @@ if (array_key_exists('mod_syslog_sentry', $conf->loghandlers) && !empty($conf->g
 
 	header('Content-Type: application/javascript');
 	?>
-	Raven
-		.config('<?php echo $public_dsn ?>')
-		.addPlugin(Raven.Plugins.Console,
-			null,
-			{
-				levels: <?php echo json_encode($log_level) ?>
-			})
-		.install();
-	Raven.setUserContext({username: '<?php echo $user->login ?>'});
-	Raven.setRelease('<?php echo DOL_VERSION ?>');
+Raven
+	.config('<?php echo $public_dsn ?>')
+	.addPlugin(
+		Raven.Plugins.Console,
+		null,
+		{
+			levels: <?php echo json_encode($log_level) ?>
+
+		}
+	)
+	.install();
+Raven.setUserContext({username: '<?php echo $user->login ?>'});
+Raven.setRelease('<?php echo DOL_VERSION ?>');
 	<?php
 	/**
 	 * Catch jQuery errors
 	 */
 	?>
-	$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
-		Raven.captureMessage(thrownError || jqXHR.statusText, {
+$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+	Raven.captureMessage(
+		thrownError || jqXHR.statusText,
+		{
 			extra: {
 				type: ajaxSettings.type,
 				url: ajaxSettings.url,
@@ -100,7 +110,8 @@ if (array_key_exists('mod_syslog_sentry', $conf->loghandlers) && !empty($conf->g
 				error: thrownError || jqXHR.statusText,
 				response: jqXHR.responseText.substring(0, 100)
 			}
-		});
-	});
+		}
+	);
+});
 	<?php
 }
