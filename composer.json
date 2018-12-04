@@ -21,7 +21,7 @@
     "php": ">=5.3.0",
     "erusev/parsedown": "^1",
     "enrise/urihelper": "^1",
-    "sentry/sentry": "1.8.3"
+    "sentry/sentry": "1.10.0"
   },
   "require-dev": {
     "jakub-onderka/php-parallel-lint": "^0",
