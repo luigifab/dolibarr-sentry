@@ -16,6 +16,6 @@
     "tests"
   ],
   "dependencies": {
-    "raven-js": "^3.23.1"
+    "raven-js": "^3.27.0"
   }
 }
