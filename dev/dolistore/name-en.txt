@@ -1,1 +1,1 @@
-My module
+Sentry
