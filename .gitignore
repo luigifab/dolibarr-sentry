@@ -1,6 +1,0 @@
-/bower_components
-/build/*.zip
-/build/html
-/build/doxygen/doxygen_warnings.log
-/dev/bin
-/vendor
