@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated J/05/01/2023
+ * Updated J/26/01/2023
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -216,7 +216,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 	protected function getUsername() {
 		global $user;
-		return is_object($user) ? $user->login : '';
+		return is_object($user) ? $user->login : false;
 	}
 
 	protected function addSourceFile($exception) {
@@ -425,7 +425,8 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		}
 
 		$data['tags'] = $this->_tags + $tags;
-		$data['tags']['username'] = $this->getUsername();
+		if (!empty($user = $this->getUsername()))
+			$data['tags']['username'] = $user;
 
 		$result = $this->send($this->apply($this->removeInvalidUtf8($data)));
 
