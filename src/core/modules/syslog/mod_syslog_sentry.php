@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated J/26/01/2023
+ * Updated M/16/05/2023
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -25,11 +25,12 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php';
 
 class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
+	public $code = 'sentry';
 	protected $_isEnabled;
 	protected $_defaultLogger = 'dol';
 	protected $_oldExceptionHandler;
 	protected $_oldErrorHandler;
-	public $code = 'sentry';
+	protected $_reports = (PHP_SAPI != 'cli') ? [] : false;
 
 	public function __construct() {
 		$this->initHandler();
@@ -40,7 +41,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 	}
 
 	public function getVersion() {
-		return '2.0.0';
+		return '2.1.0';
 	}
 
 	public function isActive() {
@@ -128,14 +129,19 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 	}
 
 
-	// from htdocs/admin/syslog.php:63
+	// htdocs/admin/syslog.php
 	public function initHandler() {
 
 		global $conf;
 		$cnf = (string) $conf->global->SYSLOG_HANDLERS;
 		$dsn = $conf->global->SYSLOG_SENTRY_DSN;
 
-		if (!empty($dsn) && (strpos($cnf, 'mod_syslog_sentry') !== false)) {
+		if (!empty($_COOKIE['__blackfire']) && empty($_GET['blackfire']))
+			$isActive = false;
+		else
+			$isActive = !empty($dsn) && (strpos($cnf, 'mod_syslog_sentry') !== false);
+
+		if ($isActive) {
 
 			// update server configuration
 			$_SERVER['SENTRY_DSN'] = (string) $dsn;
@@ -182,11 +188,25 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		$this->captureException($e, null, ['source' => 'sentry:handleError']);
 	}
 
+	// send report(s) after fastcgi_finish_request
+	public function __destruct() {
 
+		if (!empty($this->_reports)) {
+			while (is_array($report = array_shift($this->_reports)))
+				$this->{$report['type']}($report['url'], $report['data'], $report['headers']);
+		}
+	}
+
+
+	// for dolibarr
 	protected function initSentry($isTest = false) {
 
 		if (is_bool($this->_isEnabled))
 			return $this->_isEnabled;
+
+		// @todo
+		if (stripos(getenv('REQUEST_URI'), '/style.css.php') !== false)
+			return $this->_isEnabled = false;
 
 		global $conf;
 		$cnf = (string) $conf->global->SYSLOG_HANDLERS;
@@ -438,13 +458,12 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		$message   = base64_encode(gzcompress(json_encode($data)));
 		$timestamp = microtime(true);
 		$signature = $this->getSignature($message, $timestamp, $this->_secretKey);
-		$headers = [
+
+		return $this->sendRemote($this->_serverUrl, $message, [
 			'User-Agent'    => $this->_clientName,
 			'X-Sentry-Auth' => $this->getAuthHeader($signature, $timestamp, $this->_clientName, $this->_publicKey),
 			'Content-Type'  => 'application/octet-stream',
-		];
-
-		return $this->sendRemote($this->_serverUrl, $message, $headers);
+		]);
 	}
 
 	private function sendRemote($url, $data, $headers) {
@@ -454,8 +473,20 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 		// PHP 8.0+ for $parts
 		// Value should be one of: "scheme", "host", "port", "user", "pass", "query", "path", "fragment"
-		if ($parts['scheme'] == 'udp')
+		if ($parts['scheme'] == 'udp') {
+
+			if (is_array($this->_reports)) {
+				$this->_reports[] = ['type' => 'sendUdp', 'url' => $parts['netloc'], 'data' => $data, 'headers' => $headers['X-Sentry-Auth']];
+				return true;
+			}
+
 			return $this->sendUdp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
+		}
+
+		if (is_array($this->_reports)) {
+			$this->_reports[] = ['type' => 'sendHttp', 'url' => $url, 'data' => $data, 'headers' => $headers];
+			return true;
+		}
 
 		return $this->sendHttp($url, $data, $headers);
 	}
