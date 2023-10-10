@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated M/16/05/2023
+ * Updated J/05/10/2023
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -41,7 +41,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 	}
 
 	public function getVersion() {
-		return '2.1.0';
+		return '2.2.0';
 	}
 
 	public function isActive() {
@@ -204,10 +204,6 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (is_bool($this->_isEnabled))
 			return $this->_isEnabled;
 
-		// @todo
-		if (stripos(getenv('REQUEST_URI'), '/style.css.php') !== false)
-			return $this->_isEnabled = false;
-
 		global $conf;
 		$cnf = (string) $conf->global->SYSLOG_HANDLERS;
 		$dsn = $conf->global->SYSLOG_SENTRY_DSN;
@@ -239,7 +235,11 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		return is_object($user) ? $user->login : false;
 	}
 
-	protected function addSourceFile($exception) {
+	protected function addSourceFile($exception, $trace = []) {
+
+		if (!empty($trace[0]['file']) && !empty($trace[0]['line']) && ($trace[0]['file'] == $exception->getFile()) && ($trace[0]['line'] == $exception->getLine()))
+			return false;
+
 		return true;
 	}
 
@@ -289,6 +289,18 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (empty($message))
 			$message = '<unknown exception>';
 
+		// @todo hide undefined subscription of Dolibarr core
+		if (
+			(strpos($message, 'Attempt to read property "') === 0) ||
+			(strpos($message, 'Undefined property: ') === 0) ||
+			(strpos($message, 'Undefined array key ') === 0) ||
+			(strpos($message, 'Undefined variable $') === 0) ||
+			(strpos($message, 'Trying to access array offset on value of type null') === 0)
+		) {
+			if (empty($_GET['allundef']) && (strpos($exception->getFile(), '/custom/') === false))
+				return false;
+		}
+
 		// Sentry levels: debug, info, warning, error, fatal
 		// PHP level => [Sentry level, OpenMage label from mageCoreErrorHandler]
 		$levels = [
@@ -323,12 +335,10 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 			],
 		];
 
-		/**
-		 * Exception::getTrace doesn't store the point at where the exception
-		 * was thrown, so we have to stuff it in ourselves. Ugh.
-		 */
+		// Exception::getTrace doesn't store the point at where the exception
+		// was thrown, so we have to stuff it in ourselves. Ugh.
 		$trace = $exception->getTrace();
-		if ($this->addSourceFile($exception))
+		if ($this->addSourceFile($exception, $trace))
 			array_unshift($trace, ['file' => $exception->getFile(), 'line' => $exception->getLine()]);
 
 		return $this->capture($data, $trace, $tags);
@@ -712,6 +722,9 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 		if (empty($value))
 			return $value;
+
+		if (is_object($value))
+			return '#OBJECT! '.get_class($value);
 
 		if (preg_match('/^\d{16}$/', $value))
 			return '********';

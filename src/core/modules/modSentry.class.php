@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated D/09/04/2023
+ * Updated J/21/09/2023
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -37,9 +37,9 @@ class modSentry extends DolibarrModules {
 		$this->name            = preg_replace('/^mod/i', '', get_class($this));
 		$this->rights_class    = 'sentry';
 		$this->module_parts    = ['syslog' => 1];
-		$this->version         = '2.1.0';
+		$this->version         = '2.2.0';
 		$this->description     = 'Send errors to Sentry (except for Luracast/Api, configuration in syslog).';
-		$this->const_name      = 'MAIN_MODULE_'.strtoupper($this->name);
+		$this->const_name      = 'MAIN_MODULE_'.strtoupper($this->name); // not mb_strtoupper
 		$this->picto           = 'sentry@sentry';
 		$this->config_page_url = ['syslog.php'];
 		$this->depends         = ['modSyslog'];
