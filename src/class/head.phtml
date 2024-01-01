@@ -1,0 +1,91 @@
+<?php
+/**
+ * Created J/09/11/2023
+ * Updated D/24/12/2023
+ *
+ * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
+ * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
+ * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
+ * Copyright 2022-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
+ * https://github.com/luigifab/dolibarr-sentry
+ *
+ * This program is free software, you can redistribute it or modify
+ * it under the terms of the GNU General Public License (GPL) as published
+ * by the free software foundation, either version 3 of the license, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but without any warranty, without even the implied warranty of
+ * merchantability or fitness for a particular purpose. See the
+ * GNU General Public License (GPL) for more details.
+ */
+
+$dsn = $conf->global->SYSLOG_SENTRY_DSN_JS;
+
+if (!empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled'])):
+
+	$tunnel  = $conf->global->SYSLOG_SENTRY_DSN_JS_TUNNEL;
+	$tunnel  = (!empty($tunnel) && !in_array($tunnel, ['no', 'NO', 'disabled'])) ? $tunnel : '';
+
+	$options = $conf->global->SYSLOG_SENTRY_DSN_JS_OPTIONS;
+	$options = (!empty($options) && !in_array($options, ['no', 'NO', 'disabled'])) ? $options : '';
+
+	// https://docs.sentry.io/platforms/javascript/install/loader/ => doc js/loader.min.js
+	// https://browser.sentry-cdn.com/7.73.0/bundle.es5.min.js => js/sdk.min.js
+	$id = explode('//', $dsn);
+	$id = explode('@', $id[1]);
+	$id = $id[0];
+?>
+<?php if (empty($tunnel)): ?>
+ <script nonce="<?php echo getNonce() ?>" src="<?php echo $this->getUrl($conf, 'js/sdk.min.js') ?>"></script>
+<?php else: ?>
+ <script nonce="<?php echo getNonce() ?>">
+ window.sentryUrl = "<?php echo $this->getUrl($conf, 'js/sdk.min.js', 1) ?>";
+ window.sentryDsn = "<?php echo $dsn ?>";
+ window.sentryKey = "<?php echo $id ?>";
+ </script>
+ <script nonce="<?php echo getNonce() ?>" src="<?php echo $this->getUrl($conf, 'js/loader.min.js') ?>"></script>
+<?php endif ?>
+<script nonce="<?php echo getNonce() ?>">
+Sentry.onLoad(function () {
+ Sentry.init({
+ <?php if (empty($tunnel)): ?>
+  dsn: "<?php echo $dsn ?>",
+ <?php else: ?>
+  tunnel: "<?php echo $tunnel ?>",
+ <?php endif ?>
+ <?php if (!empty($options)): ?>
+  <?php echo $options ?>
+ <?php endif ?>
+  attachStacktrace: 'on'
+ });
+ Sentry.setTag("logger", "<?php echo $conf->global->SYSLOG_SENTRY_LOGGER ?>");
+ <?php if (!empty($user) && ($user->id > 0)): ?>
+  Sentry.setTag("runtime", "PHP <?php echo PHP_VERSION ?>");
+  Sentry.setTag("engine", "Dolibarr <?php echo DOL_VERSION ?>");
+  Sentry.setUser({ id: "<?php echo $user->login ?>" });
+ <?php endif ?>
+});
+console.log('Sentry is ready');
+</script>
+<?php else: ////////////////////////// ?>
+<script nonce="<?php echo getNonce() ?>">
+console.log('Sentry is disabled');
+window.onerror = function (message, url, lineNumber) {
+ try {
+  var elem = document.getElementById('fatalee');
+  if (!elem) {
+   elem = document.createElement('div');
+   elem.setAttribute('style', 'position:fixed; bottom:50px; right:50px; z-index:5555555555; padding:10px; botder-color:2px solid pink; background-color:red; color:white; font-weight:bold;');
+   elem.setAttribute('id', 'fatalee');
+   elem.nb = 0;
+   document.querySelector('body').appendChild(elem);
+  }
+  elem.innerHTML = 'JS ERR '+ (++elem.nb) + ' !';
+ }
+ catch (e) { }
+ return false;
+};
+</script>
+<?php endif ?>

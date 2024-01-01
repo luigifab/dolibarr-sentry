@@ -1,12 +1,12 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated J/05/10/2023
+ * Updated D/24/12/2023
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2023 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -21,7 +21,7 @@
  * GNU General Public License (GPL) for more details.
  */
 
-require_once DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php';
+require_once(DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php');
 
 class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
@@ -41,7 +41,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 	}
 
 	public function getVersion() {
-		return '2.2.0';
+		return '3.0.0';
 	}
 
 	public function isActive() {
@@ -51,26 +51,36 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 	public function configure() {
 		return [
 			[
-				'constant' => 'SYSLOG_SENTRY_DSN',
-				'name'     => 'DSN for PHP',
-				'default'  => '',
-				'attr'     => 'size="85" placeholder="http://public:secret@sentry.example.com:9000/pid"></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
-			], [
-				'constant' => 'SYSLOG_SENTRY_DSN_JS',
-				'name'     => 'DSN for JS',
-				'default'  => '',
-				'attr'     => 'size="85" placeholder="http://public:secret@sentry.example.com:9000/pid"></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
-			], [
-				'constant' => 'SYSLOG_SENTRY_ALL_ERRORS',
-				'name'     => 'Report all errors (<em style="font-size:11px;">error_reporting(E_ALL)</em>)',
-				'default'  => 'no',
-				'attr'     => 'size="40" placeholder="yes or no" title="yes or no"></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
-			], [
 				'constant' => 'SYSLOG_SENTRY_LOGGER',
 				'name'     => 'Logger name',
 				'default'  => 'dolibarr',
-				'attr'     => 'size="40" placeholder="Dolibarr"',
-			]
+				'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, example: <b>dolibarr</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			], [
+				'constant' => 'SYSLOG_SENTRY_DSN',
+				'name'     => '<strong>DSN for PHP</strong>',
+				'default'  => '',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, example: http://public:secret@sentry.example.com:9000/pid</span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			], [
+				'constant' => 'SYSLOG_SENTRY_ALL_ERRORS',
+				'name'     => 'Report all errors',
+				'default'  => 'no',
+				'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, <em>error_reporting(E_ALL)</em>, example: <b>yes</b> or <b>no</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			], [
+				'constant' => 'SYSLOG_SENTRY_DSN_JS',
+				'name'     => '<strong>DSN for JS</strong>',
+				'default'  => 'no',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, example: http://public:secret@sentry.example.com:9000/pid or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			], [
+				'constant' => 'SYSLOG_SENTRY_DSN_JS_TUNNEL',
+				'name'     => 'Tunnel for JS',
+				'default'  => 'no',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/troubleshooting/">doc</a>, example: <code>/sentry</code> or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			], [
+				'constant' => 'SYSLOG_SENTRY_DSN_JS_OPTIONS',
+				'name'     => 'Options for JS',
+				'default'  => 'no',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/configuration/options/">doc</a>, must be JS compliant, example: <code style="display:block; margin:5px 0; line-height:1.2;">allowUrls: /example\.org/,<br>ignoreErrors: [\'ResizeObserver loop limit exceeded\', \'Failed to fetch\'],</code> or to disable: <b>no</b> or <b>disabled</b></span> <button type="button" onclick="test();" style="position:absolute; right:50px;">Test JS</button></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			],
 		];
 	}
 
@@ -116,15 +126,11 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		];
 
 		$level = array_key_exists($content['level'], $map) ? $map[$content['level']] : 'error';
-		if (($level == 'debug') || ($level == 'info') || (strncmp($content['message'], '---', 3) === 0)) {
-			// nothing todo
-		}
-		else if (strncmp($content['message'], 'sql', 3) === 0) {
-			$query = substr($content['message'], 4);
-			$this->captureMessage('SQL: '.$query, $level);
-		}
-		else {
-			$this->captureMessage($content['message'], $level);
+		if (($level != 'debug') && ($level != 'info')) {
+			if (strncmp($content['message'], 'sql', 3) === 0)
+				$this->captureMessage('SQL: '.substr($content['message'], 4), $level);
+			else if (strpos($content['message'], '---', 3) !== 0)
+				$this->captureMessage($content['message'], $level);
 		}
 	}
 
@@ -139,16 +145,17 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (!empty($_COOKIE['__blackfire']) && empty($_GET['blackfire']))
 			$isActive = false;
 		else
-			$isActive = !empty($dsn) && (strpos($cnf, 'mod_syslog_sentry') !== false);
+			$isActive = !empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled']) && (strpos($cnf, 'mod_syslog_sentry') !== false);
 
 		if ($isActive) {
 
 			// update server configuration
 			$_SERVER['SENTRY_DSN'] = (string) $dsn;
+			$_SERVER['SENTRY_ENABLED'] = true;
 
 			// error_reporting
 			$allErrors = $conf->global->SYSLOG_SENTRY_ALL_ERRORS;
-			if (!empty($allErrors) && in_array($allErrors, ['yes', 'YES', '1']))
+			if (!empty($allErrors) && ($allErrors == 'yes'))
 				error_reporting(E_ALL);
 
 			$this->_oldExceptionHandler = set_exception_handler([$this, 'handleException']);
@@ -291,11 +298,11 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 		// @todo hide undefined subscription of Dolibarr core
 		if (
-			(strpos($message, 'Attempt to read property "') === 0) ||
-			(strpos($message, 'Undefined property: ') === 0) ||
-			(strpos($message, 'Undefined array key ') === 0) ||
-			(strpos($message, 'Undefined variable $') === 0) ||
-			(strpos($message, 'Trying to access array offset on value of type null') === 0)
+			(strncmp($message, 'Attempt to read property "', 26) === 0) ||
+			(strncmp($message, 'Undefined property: ', 20) === 0) ||
+			(strncmp($message, 'Undefined array key ', 20) === 0) ||
+			(strncmp($message, 'Undefined variable $', 20) === 0) ||
+			(strncmp($message, 'Trying to access array offset on value of type null', 51) === 0)
 		) {
 			if (empty($_GET['allundef']) && (strpos($exception->getFile(), '/custom/') === false))
 				return false;
@@ -320,7 +327,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 			E_DEPRECATED        => ['info',    'Deprecated functionality'],
 		];
 
-		$type = empty($exception->getCode()) ? get_class($exception) : $exception->getCode();
+		$type = empty($exception->getCode()) ? get_class($exception) : (string) $exception->getCode();
 		$hasSeverity = method_exists($exception, 'getSeverity');
 		if ($hasSeverity)
 			$type = $levels[$exception->getSeverity()][1] ?? $type;
@@ -386,6 +393,9 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (empty($options['tags']['runtime']))
 			$options['tags']['runtime'] = 'PHP '.PHP_VERSION;
 
+		if (empty($options['tags']['engine']))
+			$options['tags']['engine'] = 'Dolibarr '.DOL_VERSION;
+
 		$this->_serverUrl = sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path);
 		$this->_secretKey = (string) $password;
 		$this->_publicKey = (string) $username;
@@ -424,7 +434,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 			'project'     => $this->_project,
 			'site'        => $_SERVER['SERVER_NAME'] ?? '',
 			'sentry.interfaces.Http' => [
-				'method'       => $_SERVER['REQUEST_METHOD'] ?? '',
+				'method'       => $_SERVER['REQUEST_METHOD'] ?? 'CLI',
 				'url'          => $this->getCurrentUrl(),
 				'query_string' => $_SERVER['QUERY_STRNG'] ?? '',
 				'data'         => $_POST,
@@ -458,8 +468,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (!empty($user = $this->getUsername()))
 			$data['tags']['username'] = $user;
 
-		$result = $this->send($this->apply($this->removeInvalidUtf8($data)));
-
+		$this->send($this->apply($this->removeInvalidUtf8($data)));
 		return $eventId;
 	}
 
@@ -478,11 +487,9 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 	private function sendRemote($url, $data, $headers) {
 
-		$parts = parse_url($url);
+		$parts = (array) parse_url($url); // (yes)
 		$parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
 
-		// PHP 8.0+ for $parts
-		// Value should be one of: "scheme", "host", "port", "user", "pass", "query", "path", "fragment"
 		if ($parts['scheme'] == 'udp') {
 
 			if (is_array($this->_reports)) {
@@ -526,7 +533,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		curl_setopt($curl, CURLOPT_VERBOSE, false);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // yes
-		$exec = curl_exec($curl);
+		curl_exec($curl);
 		$code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 		curl_close($curl);
 
@@ -627,8 +634,8 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 				$absPath  = '';
 				$fileName = '[Anonymous function]';
-				$context['prefix'] = '';
-				$context['suffix'] = '';
+				$context['prefix'] = [];
+				$context['suffix'] = [];
 				$context['filename'] = $fileName;
 				$context['lineno'] = 0;
 			}
@@ -696,8 +703,8 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 				$frame['line'] = $line;
 			else if ($lineNo - $cur_lineno > 0 && $lineNo - $cur_lineno < 3)
 				$frame['prefix'][] = $line;
-			else if ($lineNo - $cur_lineno > -3 && $lineNo - $cur_lineno < 0)
-				$frame['suffix'][] = $line;
+			else if ($line && $lineNo - $cur_lineno > -3 && $lineNo - $cur_lineno < 0)
+				$frame['suffix'][] = $line; // when line is false, it can be eof, so ignore it
 		}
 		fclose($fh);
 
@@ -726,10 +733,10 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (is_object($value))
 			return '#OBJECT! '.get_class($value);
 
-		if (preg_match('/^\d{16}$/', $value))
+		if (preg_match('/^\d{16}$/', (string) $value))
 			return '********';
 
-		if (preg_match('/(authorization|password|passwd|secret)/i', $key))
+		if (preg_match('/(authorization|password|passwd|secret)/i', (string) $key))
 			return '********';
 
 		return $value;
