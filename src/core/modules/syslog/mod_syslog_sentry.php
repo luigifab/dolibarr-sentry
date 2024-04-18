@@ -396,7 +396,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (empty($options['tags']['engine']))
 			$options['tags']['engine'] = 'Dolibarr '.DOL_VERSION;
 
-		$this->_serverUrl = sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path);
+		$this->_serverUrl = sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project);
 		$this->_secretKey = (string) $password;
 		$this->_publicKey = (string) $username;
 		$this->_project   = (int) $project;
