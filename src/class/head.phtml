@@ -1,12 +1,12 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated D/24/12/2023
+ * Updated L/10/03/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -32,7 +32,7 @@ if (!empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled'])):
 	$options = (!empty($options) && !in_array($options, ['no', 'NO', 'disabled'])) ? $options : '';
 
 	// https://docs.sentry.io/platforms/javascript/install/loader/ => doc js/loader.min.js
-	// https://browser.sentry-cdn.com/7.73.0/bundle.es5.min.js => js/sdk.min.js
+	// https://browser.sentry-cdn.com/9.10.1/bundle.min.js => js/sdk.min.js
 	$id = explode('//', $dsn);
 	$id = explode('@', $id[1]);
 	$id = $id[0];

@@ -1,12 +1,12 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated D/24/12/2023
+ * Updated D/09/03/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -36,8 +36,8 @@ class modSentry extends DolibarrModules {
 		$this->family                = 'base';
 		$this->name                  = 'Sentry';
 		$this->module_parts          = ['syslog' => 1, 'hooks' => ['main']];
-		$this->version               = '3.0.0';
-		$this->description           = 'Send errors to Sentry (except for Luracast/Api, configuration in syslog).';
+		$this->version               = '3.0.1';
+		$this->description           = 'Sentry connector (errors from Luracast/Api ignored, configuration in syslog).';
 		$this->const_name            = 'MAIN_MODULE_'.strtoupper($this->name); // not mb_strtoupper
 		$this->picto                 = 'sentry@sentry';
 		$this->config_page_url       = ['syslog.php'];

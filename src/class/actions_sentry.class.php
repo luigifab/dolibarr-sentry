@@ -1,12 +1,12 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated D/24/12/2023
+ * Updated D/09/03/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -21,7 +21,9 @@
  * GNU General Public License (GPL) for more details.
  */
 
-class ActionsSentry {
+require_once(DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php');
+
+class ActionsSentry extends CommonHookActions { // HERE before Dolibarr 19.0.0 remove:  extends CommonHookActions
 
 	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager) {
 
@@ -37,7 +39,9 @@ class ActionsSentry {
 				$html = '<script nonce="'.getNonce().'">alert("Sentry: '.addslashes($t->getMessage()).'");</script>'."\n";
 			}
 
-			if (empty($hookmanager->resPrint))
+			if (version_compare(DOL_VERSION, '19.0.0', '>='))
+				$this->resprints = $html;
+			else if (empty($hookmanager->resPrint))
 				$hookmanager->resPrint = $html;
 			else
 				$hookmanager->resPrint .= $html;
@@ -47,6 +51,6 @@ class ActionsSentry {
 	}
 
 	protected function getUrl($conf, $file) {
-		return dol_buildpath('custom/sentry/'.$file, 1).'?v=7910';
+		return dol_buildpath('custom/sentry/'.$file, 1).'?v=9101';
 	}
 }

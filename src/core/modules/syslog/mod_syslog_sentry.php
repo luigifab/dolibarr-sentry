@@ -1,12 +1,12 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated D/24/12/2023
+ * Updated L/10/03/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2024 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -23,7 +23,7 @@
 
 require_once(DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php');
 
-class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
+class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:  implements LogHandlerInterface
 
 	public $code = 'sentry';
 	protected $_isEnabled;
@@ -41,11 +41,11 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 	}
 
 	public function getVersion() {
-		return '3.0.0';
+		return '3.0.1';
 	}
 
 	public function isActive() {
-		return true;
+		return 1;
 	}
 
 	public function configure() {
@@ -86,19 +86,19 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 
 	public function checkConfiguration() {
 
-		$errors = [];
+		$error = false;
 
 		if (!empty($_POST['SYSLOG_SENTRY_DSN'])) {
 
-			if (($error = $this->initSentry(true)) !== true) {
-				$errors = 'Can not connect to Sentry! '.$error;
+			if (($result = $this->initSentry(true)) !== true) {
+				$error = 'Can not connect to Sentry! '.$result;
 			}
 			else {
 				$result = $this->captureException(new Exception('Sentry test from Dolibarr'), null, ['source' => 'sentry:checkConfiguration']);
 				setEventMessages('Test sent to Sentry, eventId: '.print_r($result, true), null, 'mesgs');
 			}
 
-			if (!empty($errors)) {
+			if (!empty($error)) {
 				global $db;
 				// disable Sentry handler in syslog configuration
 				$handlers = json_decode(dolibarr_get_const($db, 'SYSLOG_HANDLERS', 0), true);
@@ -106,13 +106,21 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 				if ($index !== false)
 					unset($handlers[$index]);
 				dolibarr_set_const($db, 'SYSLOG_HANDLERS', json_encode($handlers), 'chaine', 0, '', 0);
+
+				if (version_compare(DOL_VERSION, '20.0.0', '>='))
+					$this->errors[] = $error;
 			}
 		}
 
-		return $errors;
+		// 19- array[] when ok OR string with error message
+		if (version_compare(DOL_VERSION, '20.0.0', '<'))
+			return empty($error) ? [] : $error;
+
+		// 20+ true OR false, error message in $this->errors[]
+		return empty($error);
 	}
 
-	public function export($content) {
+	public function export($content, $suffixinfilename = '') {
 
 		$map = [
 			LOG_EMERG   => 'fatal',
@@ -129,7 +137,7 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (($level != 'debug') && ($level != 'info')) {
 			if (strncmp($content['message'], 'sql', 3) === 0)
 				$this->captureMessage('SQL: '.substr($content['message'], 4), $level);
-			else if (strpos($content['message'], '---', 3) !== 0)
+			else if (strncmp($content['message'], '---', 3) !== 0)
 				$this->captureMessage($content['message'], $level);
 		}
 	}
@@ -322,10 +330,12 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 			E_USER_ERROR        => ['error',   'User Error'],
 			E_USER_WARNING      => ['warning', 'User Warning'],
 			E_USER_NOTICE       => ['info',    'User Notice'],
-			E_STRICT            => ['info',    'Strict Notice'],
 			E_RECOVERABLE_ERROR => ['error',   'Recoverable Error'],
 			E_DEPRECATED        => ['info',    'Deprecated functionality'],
 		];
+
+		if (PHP_VERSION_ID < 80400)
+			$levels['E_STRICT']  = ['info', 'Strict Notice'];
 
 		$type = empty($exception->getCode()) ? get_class($exception) : (string) $exception->getCode();
 		$hasSeverity = method_exists($exception, 'getSeverity');
@@ -396,7 +406,8 @@ class mod_syslog_sentry extends LogHandler implements LogHandlerInterface {
 		if (empty($options['tags']['engine']))
 			$options['tags']['engine'] = 'Dolibarr '.DOL_VERSION;
 
-		$this->_serverUrl = sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path);
+		$this->_serverUrl = sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project);
+		//$this->_serverUrl = sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path); // not working anymore
 		$this->_secretKey = (string) $password;
 		$this->_publicKey = (string) $username;
 		$this->_project   = (int) $project;
