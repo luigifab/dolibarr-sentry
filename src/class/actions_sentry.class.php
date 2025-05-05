@@ -51,6 +51,6 @@ class ActionsSentry extends CommonHookActions { // HERE before Dolibarr 19.0.0 r
 	}
 
 	protected function getUrl($conf, $file) {
-		return dol_buildpath('custom/sentry/'.$file, 1).'?v=9101';
+		return dol_buildpath('custom/sentry/'.$file, 1).'?v=9140';
 	}
 }
