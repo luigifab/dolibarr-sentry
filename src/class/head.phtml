@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated L/10/03/2025
+ * Updated L/28/07/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -32,7 +32,7 @@ if (!empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled'])):
 	$options = (!empty($options) && !in_array($options, ['no', 'NO', 'disabled'])) ? $options : '';
 
 	// https://docs.sentry.io/platforms/javascript/install/loader/ => doc js/loader.min.js
-	// https://browser.sentry-cdn.com/9.10.1/bundle.min.js => js/sdk.min.js
+	// https://browser.sentry-cdn.com/9.43.0/bundle.min.js => js/sdk.min.js
 	$id = explode('//', $dsn);
 	$id = explode('@', $id[1]);
 	$id = $id[0];

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated D/09/03/2025
+ * Updated L/28/07/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -23,7 +23,16 @@
 
 require_once(DOL_DOCUMENT_ROOT.'/core/class/commonhookactions.class.php');
 
-class ActionsSentry extends CommonHookActions { // HERE before Dolibarr 19.0.0 remove:  extends CommonHookActions
+if (version_compare(DOL_VERSION, '19.0.0', '<') && !class_exists('CommonHookActions')) {
+	class CommonHookActions {
+		// compat
+	}
+}
+
+class ActionsSentry extends CommonHookActions {
+
+	public $error = 0;
+	public $errors = [];
 
 	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager) {
 
@@ -51,6 +60,6 @@ class ActionsSentry extends CommonHookActions { // HERE before Dolibarr 19.0.0 r
 	}
 
 	protected function getUrl($conf, $file) {
-		return dol_buildpath('custom/sentry/'.$file, 1).'?v=9140';
+		return dol_buildpath('custom/sentry/'.$file, 1).'?v=9430';
 	}
 }

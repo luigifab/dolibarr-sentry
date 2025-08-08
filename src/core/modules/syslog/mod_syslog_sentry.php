@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated L/10/03/2025
+ * Updated L/28/07/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -23,7 +23,18 @@
 
 require_once(DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php');
 
-class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:  implements LogHandlerInterface
+if (version_compare(DOL_VERSION, '20.0.0', '<')) {
+	class mod_syslog_sentry extends mod_syslog_sentry_core implements LogHandlerInterface {
+		// compat
+	}
+}
+else {
+	class mod_syslog_sentry extends mod_syslog_sentry_core {
+		// compat
+	}
+}
+
+class mod_syslog_sentry_core extends LogHandler {
 
 	public $code = 'sentry';
 	protected $_isEnabled;
@@ -41,7 +52,7 @@ class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:
 	}
 
 	public function getVersion() {
-		return '3.0.1';
+		return '3.0.3';
 	}
 
 	public function isActive() {
@@ -182,6 +193,7 @@ class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:
 		// display error
 		if (ini_get('display_errors') == '1')
 			throw $e; // display exception formatted by PHP
+
 		// sentry after
 		$this->captureException($e, null, ['source' => 'sentry:handleException']);
 	}
@@ -199,6 +211,7 @@ class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:
 		// display error
 		if (ini_get('display_errors') == '1')
 			throw $e; // display exception formatted by PHP
+
 		// sentry after
 		$this->captureException($e, null, ['source' => 'sentry:handleError']);
 	}
@@ -407,7 +420,6 @@ class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:
 			$options['tags']['engine'] = 'Dolibarr '.DOL_VERSION;
 
 		$this->_serverUrl = sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project);
-		//$this->_serverUrl = sprintf('%s://%s%s/api/store/', $scheme, $netloc, $path); // not working anymore
 		$this->_secretKey = (string) $password;
 		$this->_publicKey = (string) $username;
 		$this->_project   = (int) $project;
@@ -457,7 +469,7 @@ class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:
 
 		if ((!$stack && $this->_logStacks) || ($stack === true)) {
 			$stack = debug_backtrace();
-			// Drop last stack
+			// drop last stack
 			array_shift($stack);
 		}
 
@@ -590,7 +602,7 @@ class mod_syslog_sentry extends LogHandler { // HERE before Dolibarr 20.0.0 add:
 
 	private function getCurrentUrl() {
 
-		// When running from command line the REQUEST_URI is missing
+		// when running from command line the REQUEST_URI is missing
 		if (empty($_SERVER['REQUEST_URI']))
 			return '';
 
