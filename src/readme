@@ -1,5 +1,6 @@
 Docs      : https://www.luigifab.fr/dolibarr/sentry
 Tracker   : https://github.com/luigifab/dolibarr-sentry
+Composer  : not yet
 Module    : Luigifab/Sentry (fork)
 License   : GNU GPL 3.0+ (https://opensource.org/licenses/gpl-3.0)
 Copyright : 2004-2005 Rodolphe Quiedeville <rodolphe~quiedeville~org>
@@ -8,14 +9,20 @@ Copyright : 2015-2018 Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
 Copyright : 2022-2025 Fabrice Creuzot (luigifab) <code~luigifab~fr>
 Copyright : 2022-2023 Fabrice Creuzot <fabrice~cellublue~com>
 
-
 ALL FILES ARE LICENSED UNDER THE TERMS OF THE GNU GPL 3.0+ LICENSE
 THAT BEING SAID SOME FILES COME FROM OTHER PROJECTS AND ARE UNDER OTHER LICENSES (SEE AT THE END OF THIS FILE)
 
 
 
 
-File: /js/sdk.min.js
+Notes
+- For the simple connector: https://github.com/luigifab/sentry
+- For the Maho module: https://github.com/luigifab/maho-sentry
+- For the OpenMage module: https://github.com/luigifab/openmage-sentry
+- For the Dolibarr module: https://github.com/luigifab/dolibarr-sentry
+
+
+File: /js/sentry/sdk.min.js /js/sentry/loader.min.js
 Source: https://github.com/getsentry/sentry-javascript (https://browser.sentry-cdn.com/x.y.z/bundle.min.js)
 Copyright: 2019-2025 Sentry (https://sentry.io/) and individual contributors
 License: MIT (https://opensource.org/licenses/mit)

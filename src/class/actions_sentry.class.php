@@ -1,7 +1,7 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated L/28/07/2025
+ * Updated D/07/09/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -37,7 +37,7 @@ class ActionsSentry extends CommonHookActions {
 	public function addHtmlHeader($parameters, &$object, &$action, $hookmanager) {
 
 		global $conf, $user;
-		if (!empty($conf->sentry->enabled) && !empty($_SERVER['SENTRY_ENABLED'])) {
+		if (!empty($conf->sentry->enabled)) {
 
 			try {
 				ob_start();
@@ -60,6 +60,6 @@ class ActionsSentry extends CommonHookActions {
 	}
 
 	protected function getUrl($conf, $file) {
-		return dol_buildpath('custom/sentry/'.$file, 1).'?v=9430';
+		return dol_buildpath('custom/sentry/'.$file, 1).'?v=10100';
 	}
 }

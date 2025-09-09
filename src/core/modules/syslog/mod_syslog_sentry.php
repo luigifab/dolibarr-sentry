@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated L/28/07/2025
+ * Updated D/07/09/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -23,17 +23,6 @@
 
 require_once(DOL_DOCUMENT_ROOT.'/core/modules/syslog/logHandler.php');
 
-if (version_compare(DOL_VERSION, '20.0.0', '<')) {
-	class mod_syslog_sentry extends mod_syslog_sentry_core implements LogHandlerInterface {
-		// compat
-	}
-}
-else {
-	class mod_syslog_sentry extends mod_syslog_sentry_core {
-		// compat
-	}
-}
-
 class mod_syslog_sentry_core extends LogHandler {
 
 	public $code = 'sentry';
@@ -52,7 +41,7 @@ class mod_syslog_sentry_core extends LogHandler {
 	}
 
 	public function getVersion() {
-		return '3.0.3';
+		return '3.0.4';
 	}
 
 	public function isActive() {
@@ -90,7 +79,7 @@ class mod_syslog_sentry_core extends LogHandler {
 				'constant' => 'SYSLOG_SENTRY_DSN_JS_OPTIONS',
 				'name'     => 'Options for JS',
 				'default'  => 'no',
-				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/configuration/options/">doc</a>, must be JS compliant, example: <code style="display:block; margin:5px 0; line-height:1.2;">allowUrls: /example\.org/,<br>ignoreErrors: [\'ResizeObserver loop limit exceeded\', \'Failed to fetch\'],</code> or to disable: <b>no</b> or <b>disabled</b></span> <button type="button" onclick="test();" style="position:absolute; right:50px;">Test JS</button></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/configuration/options/">doc</a>, must be JS compliant, example: <code style="display:block; margin:5px 0; line-height:1.2;">allowUrls: /example\.org/,<br>ignoreErrors: [\'ResizeObserver loop limit exceeded\', \'Failed to fetch\'],</code> or to disable: <b>no</b> or <b>disabled</b></span> <button type="button" onclick="try { aFunctionThatMightFail(); } catch (err) { alert(\'Test sent to Sentry, eventId: \' + Sentry.captureException(err)); }" style="position:absolute; right:50px;">Test JS</button></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
 			],
 		];
 	}
@@ -170,7 +159,6 @@ class mod_syslog_sentry_core extends LogHandler {
 
 			// update server configuration
 			$_SERVER['SENTRY_DSN'] = (string) $dsn;
-			$_SERVER['SENTRY_ENABLED'] = true;
 
 			// error_reporting
 			$allErrors = $conf->global->SYSLOG_SENTRY_ALL_ERRORS;
@@ -180,6 +168,8 @@ class mod_syslog_sentry_core extends LogHandler {
 			$this->_oldExceptionHandler = set_exception_handler([$this, 'handleException']);
 			$this->_oldErrorHandler = set_error_handler([$this, 'handleError'], error_reporting());
 		}
+
+		return $isActive;
 	}
 
 	// set_exception_handler
@@ -239,6 +229,7 @@ class mod_syslog_sentry_core extends LogHandler {
 
 		// auto_log_stacks, name, tags
 		$options = [];
+		$options['tags']['engine'] = 'Dolibarr '.DOL_VERSION;
 
 		try {
 			$isEnabled = strpos($cnf, 'mod_syslog_sentry') !== false;
@@ -330,7 +321,7 @@ class mod_syslog_sentry_core extends LogHandler {
 		}
 
 		// Sentry levels: debug, info, warning, error, fatal
-		// PHP level => [Sentry level, OpenMage label from mageCoreErrorHandler]
+		// PHP level => [Sentry level, OpenMage/Maho label from mageCoreErrorHandler]
 		$levels = [
 			E_ERROR             => ['error',   'Error'],
 			E_WARNING           => ['warning', 'Warning'],
@@ -416,9 +407,6 @@ class mod_syslog_sentry_core extends LogHandler {
 		if (empty($options['tags']['runtime']))
 			$options['tags']['runtime'] = 'PHP '.PHP_VERSION;
 
-		if (empty($options['tags']['engine']))
-			$options['tags']['engine'] = 'Dolibarr '.DOL_VERSION;
-
 		$this->_serverUrl = sprintf('%s://%s%s/api/%s/store/', $scheme, $netloc, $path, $project);
 		$this->_secretKey = (string) $password;
 		$this->_publicKey = (string) $username;
@@ -426,13 +414,15 @@ class mod_syslog_sentry_core extends LogHandler {
 		$this->_logStacks = (bool) ($options['auto_log_stacks'] ?? false);
 		$this->_name      = (string) (empty($options['name']) ? gethostname() : $options['name']);
 		$this->_tags      = $options['tags'];
+
+		return $this;
 	}
 
  	private function capture($data, $stack, $tags = []) {
 
 		//echo '<pre>'; debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS); exit;
 		if ($this->initSentry() !== true)
-			return true;
+			return false;
 
 		if (!isset($data['logger']))
 			$data['logger'] = $this->_defaultLogger;
@@ -763,5 +753,16 @@ class mod_syslog_sentry_core extends LogHandler {
 			return '********';
 
 		return $value;
+	}
+}
+
+if (version_compare(DOL_VERSION, '20.0.0', '<')) {
+	class mod_syslog_sentry extends mod_syslog_sentry_core implements LogHandlerInterface {
+		// compat
+	}
+}
+else {
+	class mod_syslog_sentry extends mod_syslog_sentry_core {
+		// compat
 	}
 }
