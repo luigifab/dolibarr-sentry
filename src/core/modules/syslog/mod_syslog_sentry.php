@@ -1,7 +1,7 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated D/07/09/2025
+ * Updated L/06/10/2025
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
@@ -41,7 +41,7 @@ class mod_syslog_sentry_core extends LogHandler {
 	}
 
 	public function getVersion() {
-		return '3.0.4';
+		return '3.0.5';
 	}
 
 	public function isActive() {
@@ -548,8 +548,10 @@ class mod_syslog_sentry_core extends LogHandler {
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); // yes
 		curl_exec($curl);
 		$code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		curl_close($curl);
+		if (PHP_VERSION_ID < 80000)
+			curl_close($curl);
 
+		// @todo log fault
 		return $code == 200;
 	}
 

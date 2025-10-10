@@ -60,6 +60,6 @@ class ActionsSentry extends CommonHookActions {
 	}
 
 	protected function getUrl($conf, $file) {
-		return dol_buildpath('custom/sentry/'.$file, 1).'?v=10100';
+		return dol_buildpath('custom/sentry/'.$file, 1).'?v=10170';
 	}
 }

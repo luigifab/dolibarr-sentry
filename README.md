@@ -6,8 +6,8 @@ Updated version of [Sentry](https://github.com/getsentry/sentry) connector for [
 
 For more information, go to https://www.luigifab.fr/dolibarr/sentry (IPv6 is required).
 
-- Current version: 3.0.4 (09/09/2025)
-- Compatibility: Dolibarr 5.0+ (21 included), PHP 7.2 / 7.3 / 7.4 / 8.0 / 8.1 / 8.2 / 8.3 / 8.4
+- Current version: 3.0.5 (10/10/2025)
+- Compatibility: Dolibarr 5.0+ (21 included), PHP 7.2 / 7.3 / 7.4 / 8.0 / 8.1 / 8.2 / 8.3 / 8.4 / 8.5
 - License: GNU GPL 3.0+ (with the exception of Sentry SDK JS, which is licensed by MIT)
 
 If you like, take some of your time to improve some translations, go to https://bit.ly/2HyCCEc.
