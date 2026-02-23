@@ -353,7 +353,7 @@ class mod_syslog_sentry_core extends LogHandler {
 			$type = $levels[$exception->getSeverity()][1] ?? $type;
 
 		$data = [
-			'environnement' => $conf->global->SYSLOG_SENTRY_ENVIRONMENT,
+			'environment' => $conf->global->SYSLOG_SENTRY_ENVIRONMENT,
 			'message' => $customMessage,
 			'level'   => $hasSeverity ? ($levels[$exception->getSeverity()][0] ?? 'error') : 'error',
 			'sentry.interfaces.Exception' => [
