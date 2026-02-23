@@ -80,7 +80,12 @@ class mod_syslog_sentry_core extends LogHandler {
 				'name'     => 'Options for JS',
 				'default'  => 'no',
 				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/configuration/options/">doc</a>, must be JS compliant, example: <code style="display:block; margin:5px 0; line-height:1.2;">allowUrls: /example\.org/,<br>ignoreErrors: [\'ResizeObserver loop limit exceeded\', \'Failed to fetch\'],</code> or to disable: <b>no</b> or <b>disabled</b></span> <button type="button" onclick="try { aFunctionThatMightFail(); } catch (err) { alert(\'Test sent to Sentry, eventId: \' + Sentry.captureException(err)); }" style="position:absolute; right:50px;">Test JS</button></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
-			],
+			], [
+                'constant' => 'SYSLOG_SENTRY_ENVIRONMENT',
+                'name'     => 'Environment',
+                'default'  => 'production',
+                'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, example: <b>production</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+            ]
 		];
 	}
 
@@ -303,6 +308,7 @@ class mod_syslog_sentry_core extends LogHandler {
 	}
 
 	public function captureException($exception, $customMessage = null, $tags = []) {
+        global $conf;
 
 		$message = $exception->getMessage();
 		if (empty($message))
@@ -347,6 +353,7 @@ class mod_syslog_sentry_core extends LogHandler {
 			$type = $levels[$exception->getSeverity()][1] ?? $type;
 
 		$data = [
+			'environnement' => $conf->global->SYSLOG_SENTRY_ENVIRONMENT,
 			'message' => $customMessage,
 			'level'   => $hasSeverity ? ($levels[$exception->getSeverity()][0] ?? 'error') : 'error',
 			'sentry.interfaces.Exception' => [
