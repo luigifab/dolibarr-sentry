@@ -3,7 +3,7 @@
  * Created J/02/11/2023
  * Updated L/06/10/2025
  *
- * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2026 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -43,7 +43,7 @@ function sendRequest(string $url) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
 	curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-	curl_setopt($ch, CURLOPT_ENCODING , ''); // @see https://stackoverflow.com/q/17744112/2980105
+	curl_setopt($ch, CURLOPT_ENCODING, ''); // @see https://stackoverflow.com/q/17744112/2980105
 	curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0');
 
 	$result = curl_exec($ch);
@@ -55,7 +55,7 @@ function sendRequest(string $url) {
 }
 
 // @see https://github.com/getsentry/sentry-javascript
-// https://browser.sentry-cdn.com/10.17.0/bundle.min.js => js/sentry/sdk.min.js
+// https://browser.sentry-cdn.com/10.40.0/bundle.min.js => js/sentry/sdk.min.js
 $results = sendRequest('https://api.github.com/repos/getsentry/sentry-javascript/releases');
 if (mb_strpos($results, '"tag_name": "') !== false) {
 

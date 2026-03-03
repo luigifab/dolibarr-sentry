@@ -1,12 +1,12 @@
 <?php
 /**
  * Forked from https://github.com/GPCsolutions/sentry
- * Updated L/06/10/2025
+ * Updated S/28/02/2026
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2026 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -41,7 +41,7 @@ class mod_syslog_sentry_core extends LogHandler {
 	}
 
 	public function getVersion() {
-		return '3.0.5';
+		return '3.1.0';
 	}
 
 	public function isActive() {
@@ -56,36 +56,36 @@ class mod_syslog_sentry_core extends LogHandler {
 				'default'  => 'dolibarr',
 				'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, example: <b>dolibarr</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
 			], [
+				'constant' => 'SYSLOG_SENTRY_ENVIRONMENT',
+				'name'     => 'Environment',
+				'default'  => 'no',
+				'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, example: <b>production</b>, or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+			], [
 				'constant' => 'SYSLOG_SENTRY_DSN',
 				'name'     => '<strong>DSN for PHP</strong>',
 				'default'  => '',
-				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, example: http://public:secret@sentry.example.com:9000/pid</span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, example: <b>http://public:secret@sentry.example.com:9000/pid</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
 			], [
 				'constant' => 'SYSLOG_SENTRY_ALL_ERRORS',
 				'name'     => 'Report all errors',
 				'default'  => 'no',
-				'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, <em>error_reporting(E_ALL)</em>, example: <b>yes</b> or <b>no</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+				'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, <code>error_reporting(E_ALL)</code>, example: <b>yes</b> or <b>no</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
 			], [
 				'constant' => 'SYSLOG_SENTRY_DSN_JS',
 				'name'     => '<strong>DSN for JS</strong>',
 				'default'  => 'no',
-				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, example: http://public:secret@sentry.example.com:9000/pid or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, example: <b>http://public:secret@sentry.example.com:9000/pid</b>, or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
 			], [
 				'constant' => 'SYSLOG_SENTRY_DSN_JS_TUNNEL',
 				'name'     => 'Tunnel for JS',
 				'default'  => 'no',
-				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/troubleshooting/">doc</a>, example: <code>/sentry</code> or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
+				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, (<a href="https://docs.sentry.io/platforms/javascript/troubleshooting/">docs</a>), example: <b>/sentry</b>, or to disable: <b>no</b> or <b>disabled</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
 			], [
 				'constant' => 'SYSLOG_SENTRY_DSN_JS_OPTIONS',
 				'name'     => 'Options for JS',
 				'default'  => 'no',
 				'attr'     => 'size="85"><br><span style="color:#767676;"><b>required</b>, <a href="https://docs.sentry.io/platforms/javascript/configuration/options/">doc</a>, must be JS compliant, example: <code style="display:block; margin:5px 0; line-height:1.2;">allowUrls: /example\.org/,<br>ignoreErrors: [\'ResizeObserver loop limit exceeded\', \'Failed to fetch\'],</code> or to disable: <b>no</b> or <b>disabled</b></span> <button type="button" onclick="try { aFunctionThatMightFail(); } catch (err) { alert(\'Test sent to Sentry, eventId: \' + Sentry.captureException(err)); }" style="position:absolute; right:50px;">Test JS</button></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
-			], [
-                'constant' => 'SYSLOG_SENTRY_ENVIRONMENT',
-                'name'     => 'Environment',
-                'default'  => 'production',
-                'attr'     => 'size="40"><br><span style="color:#767676;"><b>required</b>, example: <b>production</b></span></td><td class="left"></td></tr><tr class="oddeven"><td></td><td class="nowrap"',
-            ]
+			],
 		];
 	}
 
@@ -153,17 +153,20 @@ class mod_syslog_sentry_core extends LogHandler {
 
 		global $conf;
 		$cnf = (string) $conf->global->SYSLOG_HANDLERS;
-		$dsn = $conf->global->SYSLOG_SENTRY_DSN;
+		$dsn = (string) $conf->global->SYSLOG_SENTRY_DSN;
+		$env = (string) $conf->global->SYSLOG_SENTRY_ENVIRONMENT;
 
 		if (!empty($_COOKIE['__blackfire']) && empty($_GET['blackfire']))
 			$isActive = false;
 		else
-			$isActive = !empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled']) && (strpos($cnf, 'mod_syslog_sentry') !== false);
+			$isActive = !empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled', 'DISABLED']) && (strpos($cnf, 'mod_syslog_sentry') !== false);
 
 		if ($isActive) {
 
 			// update server configuration
-			$_SERVER['SENTRY_DSN'] = (string) $dsn;
+			$_SERVER['SENTRY_DSN'] = $dsn;
+			if (!empty($env) && !in_array($env, ['no', 'NO', 'disabled', 'DISABLED']))
+				$_SERVER['SENTRY_ENVIRONMENT'] = $env;
 
 			// error_reporting
 			$allErrors = $conf->global->SYSLOG_SENTRY_ALL_ERRORS;
@@ -229,8 +232,8 @@ class mod_syslog_sentry_core extends LogHandler {
 
 		global $conf;
 		$cnf = (string) $conf->global->SYSLOG_HANDLERS;
-		$dsn = $conf->global->SYSLOG_SENTRY_DSN;
-		$log = $conf->global->SYSLOG_SENTRY_LOGGER;
+		$dsn = (string) $conf->global->SYSLOG_SENTRY_DSN;
+		$log = (string) $conf->global->SYSLOG_SENTRY_LOGGER;
 
 		// auto_log_stacks, name, tags
 		$options = [];
@@ -243,7 +246,7 @@ class mod_syslog_sentry_core extends LogHandler {
 
 			$this->_isEnabled = $isEnabled;
 			if (!empty($log))
-				$this->_defaultLogger = (string) $log;
+				$this->_defaultLogger = $log;
 		}
 		catch (Throwable $t) {
 			$this->_isEnabled = false;
@@ -308,7 +311,6 @@ class mod_syslog_sentry_core extends LogHandler {
 	}
 
 	public function captureException($exception, $customMessage = null, $tags = []) {
-        global $conf;
 
 		$message = $exception->getMessage();
 		if (empty($message))
@@ -353,15 +355,17 @@ class mod_syslog_sentry_core extends LogHandler {
 			$type = $levels[$exception->getSeverity()][1] ?? $type;
 
 		$data = [
-			'environment' => $conf->global->SYSLOG_SENTRY_ENVIRONMENT,
-			'message' => $customMessage,
-			'level'   => $hasSeverity ? ($levels[$exception->getSeverity()][0] ?? 'error') : 'error',
+			'message'     => $customMessage,
+			'level'       => $hasSeverity ? ($levels[$exception->getSeverity()][0] ?? 'error') : 'error',
 			'sentry.interfaces.Exception' => [
-				'value'  => $message,
-				'type'   => $type,
-				'module' => $exception->getFile().':'.$exception->getLine(),
+				'value'   => $message,
+				'type'    => $type,
+				'module'  => $exception->getFile().':'.$exception->getLine(),
 			],
 		];
+
+		if (!empty($_SERVER['SENTRY_ENVIRONMENT']))
+			$data['environment'] = $_SERVER['SENTRY_ENVIRONMENT'];
 
 		// Exception::getTrace doesn't store the point at where the exception
 		// was thrown, so we have to stuff it in ourselves. Ugh.
@@ -471,11 +475,9 @@ class mod_syslog_sentry_core extends LogHandler {
 		}
 
 		if (!empty($stack)) {
-			/**
-			 * PHP's way of storing backstacks seems bass-ackwards to me
-			 * 'function' is the function you're in; it's any function being
-			 * called, so we have to shift 'function' down by 1. Ugh.
-			 */
+			// PHP's way of storing backstacks seems bass-ackwards to me
+			// 'function' is the function you're in; it's any function being
+			// called, so we have to shift 'function' down by 1. Ugh.
 			for ($i = 0; $i < count($stack) - 1; $i++)
 				$stack[$i]['function'] = $stack[$i + 1]['function'];
 			$stack[count($stack) - 1]['function'] = null;

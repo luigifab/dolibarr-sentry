@@ -1,12 +1,12 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated L/06/10/2025
+ * Updated S/28/02/2026
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2026 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -23,16 +23,19 @@
 
 $dsn = $conf->global->SYSLOG_SENTRY_DSN_JS;
 
-if (!empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled'])):
+if (!empty($dsn) && !in_array($dsn, ['no', 'NO', 'disabled', 'DISABLED'])):
+
+	$env     = $conf->global->SYSLOG_SENTRY_ENVIRONMENT;
+	$env     = (!empty($env) && !in_array($env, ['no', 'NO', 'disabled', 'DISABLED'])) ? $env : '';
 
 	$tunnel  = $conf->global->SYSLOG_SENTRY_DSN_JS_TUNNEL;
-	$tunnel  = (!empty($tunnel) && !in_array($tunnel, ['no', 'NO', 'disabled'])) ? $tunnel : '';
+	$tunnel  = (!empty($tunnel) && !in_array($tunnel, ['no', 'NO', 'disabled', 'DISABLED'])) ? $tunnel : '';
 
 	$options = $conf->global->SYSLOG_SENTRY_DSN_JS_OPTIONS;
-	$options = (!empty($options) && !in_array($options, ['no', 'NO', 'disabled'])) ? $options : '';
+	$options = (!empty($options) && !in_array($options, ['no', 'NO', 'disabled', 'DISABLED'])) ? $options : '';
 
 	// https://docs.sentry.io/platforms/javascript/install/loader/ => doc js/loader.min.js
-	// https://browser.sentry-cdn.com/10.17.0/bundle.min.js => js/sdk.min.js
+	// https://browser.sentry-cdn.com/10.40.0/bundle.min.js => js/sdk.min.js
 	$id = explode('//', $dsn);
 	$id = explode('@', $id[1]);
 	$id = $id[0];
@@ -54,6 +57,9 @@ Sentry.onLoad(function () {
   dsn: "<?php echo $dsn ?>",
  <?php else: ?>
   tunnel: "<?php echo $tunnel ?>",
+ <?php endif ?>
+ <?php if (!empty($env)): ?>
+  environment: "<?php echo $env ?>",
  <?php endif ?>
  <?php if (!empty($options)): ?>
   <?php echo $options ?>

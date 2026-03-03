@@ -1,12 +1,12 @@
 <?php
 /**
  * Created J/09/11/2023
- * Updated D/07/09/2025
+ * Updated S/28/02/2026
  *
  * Copyright 2004-2005 | Rodolphe Quiedeville <rodolphe~quiedeville~org>
  * Copyright 2004-2015 | Laurent Destailleur <eldy~users.sourceforge~net>
  * Copyright 2015-2018 | Raphaël Doursenaud <rdoursenaud~gpcsolutions~fr>
- * Copyright 2022-2025 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
+ * Copyright 2022-2026 | Fabrice Creuzot (luigifab) <code~luigifab~fr>
  * Copyright 2022-2023 | Fabrice Creuzot <fabrice~cellublue~com>
  * https://github.com/luigifab/dolibarr-sentry
  *
@@ -60,6 +60,6 @@ class ActionsSentry extends CommonHookActions {
 	}
 
 	protected function getUrl($conf, $file) {
-		return dol_buildpath('custom/sentry/'.$file, 1).'?v=10170';
+		return dol_buildpath('custom/sentry/'.$file, 1).'?v=10400';
 	}
 }
